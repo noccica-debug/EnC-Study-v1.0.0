@@ -471,7 +471,7 @@
     // =========================================================================
     // 4. 핵심 연산기 (AI 통신 및 락 다운)
     // =========================================================================
-    async function analyzeData() {
+   async function analyzeData() {
         const apiKey = getApiKey();
         if (!apiKey) {
             alert("관리자 설정(⚙️)에서 API Key를 먼저 입력하십시오.");
@@ -484,12 +484,10 @@
             return;
         }
 
-        // 버튼 잠금 (Debounce)
         const analyzeBtn = document.getElementById('btn-analyze');
         analyzeBtn.disabled = true;
         analyzeBtn.innerText = "연산 중입니다...";
 
-        // 뷰 전환
         switchView('test');
         const statusBox = document.getElementById('loading-status');
         const submitBtn = document.getElementById('btn-submit');
@@ -497,115 +495,53 @@
         
         submitBtn.style.display = 'none';
         errorBtn.style.display = 'none';
-        statusBox.innerHTML = `EnC Study Kernel(v${APP_VERSION})이 [라우터 DB]를 기반으로<br>논리를 연산 중입니다...<br><br><span style="color: var(--text-sub); font-size: 0.85rem;">(소요 시간: 약 3~5초)</span>`;
+        statusBox.innerHTML = `EnC Study Kernel(v${APP_VERSION})이 [라우터 DB]를 기반으로 논리를 연산 중입니다...`;
 
         try {
-            try {
-    const systemInstruction = `You are 'EnC Study v1.0.0', a deterministic logic calculator for the Korean CSAT English exam.
-All user inputs are English passages. Never engage in conversation. Never provide explanations. 
-Output STRICTLY in valid JSON format without markdown code blocks.
+            const systemInstruction = `You are 'EnC Study v1.0.0'. Output STRICTLY in JSON format without markdown. 
+[Router DB] R1: experiment, research -> result. R2: However, But -> reversal. R3: process, sequence -> fact. R4: should, must -> imperative. Skip: graphs, percentage.
+[Output Format] {"main_idea": "...", "trigger_word": "...", "core_syntax": "...", "vocabulary": ["..."]}`;
 
-[Router DB]
-- [R1_Science]: Tokens (experiment, research, evidence, analysis, demonstrate). Strategy: Extract hints from conclusion sentences containing 'Thus' or 'In this way'.
-- [R2_Rebuttal]: Tokens (However, But, Yet, critique, myth, traditional). Strategy: Extract hints from the sentence immediately following the reversal token.
-- [R3_Fact]: Tokens (As a consequence, This means, process, sequence). Strategy: Extract hints from chronological conclusions.
-- [R4_Imperative]: Tokens (should, must, encourage, imperative, important). Strategy: Extract hints from the last 1-3 sentences.
-- [Skip]: Tokens (graphs, percentage, born, weather). Strategy: Output exactly {"error": "연산 제외 플래그 발동."}
-
-[Output Format]
-JSON only: {"main_idea": "...", "trigger_word": "...", "core_syntax": "...", "vocabulary": ["..."]}`;
-
-    let promptParts = [{ text: "Analyze the logical structure of this text based on the [Router DB].\n" + (inputText ? `Input Text: ${inputText}` : "") }];
-    if (base64ImageData) {
-        promptParts.push({ inline_data: { mime_type: imageMimeType, data: base64ImageData } });
-    }
-
-    // [핵심 수정: 최신 v1beta 표준 규격]
-    const requestBody = {
-        contents: [{ parts: promptParts }],
-        // system_instruction을 최상위로 이동
-        system_instruction: { 
-            parts: [{ text: systemInstruction }] 
-        },
-        generationConfig: {
-            temperature: 0.1,
-            responseMimeType: "application/json" // 뱀 표기법에서 카멜 표기법으로 수정
-        }
-    };
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-    });
-    // ... 이하 동일}
-
-[Operation Process]
-1. Scan the input text/image and identify the matching Router from the [Router DB].
-2. Apply the specific Strategy of that Router.
-3. Output the result in the following JSON format ONLY. Values MUST be in Korean except for specific English words.
-
-{
-  "main_idea": "[Router: R1_Science] (한국어 1줄 핵심 요약)",
-  "trigger_word": "(정답을 결정짓는 핵심 영단어/구와 한국어 뜻)",
-  "core_syntax": "(타겟 좌표의 핵심 영어 문장과 한국어 해석)",
-  "vocabulary": ["영단어1: 뜻", "영단어2: 뜻"]
-}`;
-
-            let promptParts = [{ text: "Analyze the logical structure of this text based on the [Router DB].\n" + (inputText ? `Input Text: ${inputText}` : "") }];
+            let promptParts = [{ text: "Analyze this text: " + inputText }];
             if (base64ImageData) {
                 promptParts.push({ inline_data: { mime_type: imageMimeType, data: base64ImageData } });
             }
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     system_instruction: { parts: [{ text: systemInstruction }] },
                     contents: [{ parts: promptParts }],
-                    generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
+                    generationConfig: { temperature: 0.1, responseMimeType: "application/json" }
                 })
             });
 
             const data = await response.json();
-            if (data.error) throw new Error(data.error.message);
+            if (data.error) throw new Error(data.error.message || "API 요청 실패");
 
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                const resultJson = JSON.parse(data.candidates[0].content.parts[0].text);
-                
-                if (resultJson.error) {
-                    statusBox.innerHTML = `<div class="error-message">${resultJson.error}</div><span style='font-size: 0.9rem; color: var(--text-sub);'>기계적 연산 범위를 벗어난 지문입니다.</span>`;
-                    errorBtn.style.display = 'block';
-                    analyzeBtn.disabled = false; // 버튼 락 해제
-                    analyzeBtn.innerText = "▶ 지문 분석 시작";
-                    return;
-                }
+            const resultJson = JSON.parse(data.candidates[0].content.parts[0].text);
+            
+            cachedResult = resultJson;
+            document.getElementById('res-main-idea').innerText = resultJson.main_idea;
+            document.getElementById('res-trigger-word').innerText = resultJson.trigger_word;
+            document.getElementById('res-core-syntax').innerText = resultJson.core_syntax;
+            
+            const vocabList = document.getElementById('res-vocabulary');
+            vocabList.innerHTML = '';
+            if (resultJson.vocabulary) resultJson.vocabulary.forEach(v => vocabList.innerHTML += `<li>- ${v}</li>`);
 
-                // 결과 캐싱 및 렌더링
-                cachedResult = resultJson;
-                document.getElementById('res-main-idea').innerText = resultJson.main_idea || "정보 없음";
-                document.getElementById('res-trigger-word').innerText = resultJson.trigger_word || "정보 없음";
-                document.getElementById('res-core-syntax').innerText = resultJson.core_syntax || "정보 없음";
-                
-                const vocabList = document.getElementById('res-vocabulary');
-                vocabList.innerHTML = '';
-                if (Array.isArray(resultJson.vocabulary)) {
-                    resultJson.vocabulary.forEach(word => { vocabList.innerHTML += `<li>- ${word}</li>`; });
-                }
-
-                statusBox.innerHTML = "문장 구조 및 논리 분석이 완벽히 종료되었습니다.<br><br><span style='color: var(--google-blue); font-weight:600;'>[정답 제출 및 채점] 버튼을 누르십시오.</span>";
-                submitBtn.style.display = 'block';
-            }
+            statusBox.innerHTML = "분석 종료. [정답 제출 및 채점]을 누르십시오.";
+            submitBtn.style.display = 'block';
             
         } catch (error) {
-            console.error(error);
-            statusBox.innerHTML = `<div class="error-message">연산 오류 발생</div><span style='color: var(--text-main); font-size: 0.9rem;'>API Key가 올바른지 확인하십시오.</span><br><br><span style='font-size: 0.8rem; color: var(--text-sub);'>${error.message}</span>`;
+            statusBox.innerHTML = `<div class="error-message">오류: ${error.message}</div>`;
             errorBtn.style.display = 'block';
+        } finally {
             analyzeBtn.disabled = false;
             analyzeBtn.innerText = "▶ 지문 분석 시작";
         }
     }
-
     // =========================================================================
     // 5. 구글 시트(GAS) 로깅 통신부 (CORS 대응)
     // =========================================================================
