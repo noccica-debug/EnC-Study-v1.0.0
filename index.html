@@ -107,6 +107,7 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap; /* 모바일 기기 글자 세로 쪼개짐 방지 */
         }
 
         button:disabled {
@@ -398,7 +399,19 @@
         window.scrollTo(0, 0);
     }
 
-    function triggerCamera(step) { alert('네이티브 카메라 호출 (API): 단계 ' + step); }
+    // [복구 완료] HTML5 Media Capture API를 이용한 실제 디바이스 카메라 연동
+    function triggerCamera(step) { 
+        const cameraInput = document.createElement("input");
+        cameraInput.type = "file";
+        cameraInput.accept = "image/*";
+        cameraInput.capture = "environment"; // 하드웨어 후면 카메라(스캔용) 직접 호출
+        
+        cameraInput.onchange = function(event) {
+            handleImageUpload(event);
+        };
+        
+        cameraInput.click();
+    }
 
     function resetAndGoInput() {
         base64ImageData = null; imageMimeType = null; cachedResult = null;
