@@ -1026,9 +1026,11 @@
             }
         }
 
-        // 안전한 TTS 실행 (검사 코드 삭제)
+       // 웹뷰 음성 증발 방지용 전역 변수 추가
+        let currentUtterance = null;
+
         function manageTTS(mode) {
-            try { if(window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e) {}
+            try { window.speechSynthesis.cancel(); } catch(e) {}
 
             if (mode === 'passage' && !studyState.listenPassage) return;
             if (mode === 'vocab' && !studyState.listenVocab) return;
@@ -1056,11 +1058,13 @@
 
             if (textToRead) {
                 try {
-                    const utterance = new SpeechSynthesisUtterance(textToRead);
-                    utterance.lang = 'en-US';
-                    window.speechSynthesis.speak(utterance);
+                    // 전역 변수에 할당하여 안드로이드가 강제로 끄는 것을 방지
+                    currentUtterance = new SpeechSynthesisUtterance(textToRead);
+                    currentUtterance.lang = 'en-US';
+                    currentUtterance.rate = 1.0; // 안드로이드 웹뷰 필수 설정값
+                    currentUtterance.pitch = 1.0; // 안드로이드 웹뷰 필수 설정값
                     
-                    utterance.onend = () => {
+                    currentUtterance.onend = () => {
                         if (mode === 'passage') {
                             studyState.listenPassage = false;
                             const passBtn = document.querySelectorAll('.toggle-btn')[3];
@@ -1073,8 +1077,14 @@
                             vocabBtn.innerHTML = vocabBtn.innerHTML.replace('🟢', '⚪');
                         }
                     };
+
+                    currentUtterance.onerror = (e) => {
+                        showToast("음성 재생 에러: 기기의 TTS 설정을 확인하세요.");
+                    };
+
+                    window.speechSynthesis.speak(currentUtterance);
                 } catch(e) {
-                    showToast("음성을 재생할 수 없습니다.");
+                    showToast("이 기기에서는 음성 엔진을 호출할 수 없습니다.");
                 }
             }
         }
