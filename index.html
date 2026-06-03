@@ -18,7 +18,6 @@
             --primary-toss: #3182f6;
             --font-family: 'Roboto', -apple-system, sans-serif;
             
-            /* Pen Colors */
             --pen-claim: rgba(239, 68, 68, 0.15);     
             --pen-reason: rgba(234, 179, 8, 0.2);     
             --pen-evidence: rgba(59, 130, 246, 0.15); 
@@ -37,19 +36,16 @@
         .card { background-color: #fff; border-radius: 24px; padding: 20px; margin-bottom: 16px; border: 1px solid #E0E2DB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); word-break: keep-all; }
         .card-title { font-size: 14px; color: var(--md-sys-color-primary); font-weight: 700; margin-bottom: 12px; }
         
-        /* Educational Toggle Buttons */
         .toggle-panel { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .toggle-btn { flex: 1 1 calc(33% - 8px); background: var(--md-sys-color-surface-container); border: none; border-radius: 8px; padding: 10px 4px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; color: #444; text-align: center; }
         .toggle-btn.on { background: #e8f3ff; color: var(--primary-toss); box-shadow: inset 0 0 0 1.5px var(--primary-toss); }
         
-        /* Reader Area Text */
         .text-content { font-size: 16px; line-height: 1.65; transition: font-size 0.2s ease; color: #333; }
         .text-content.zoom-on { font-size: 20px; line-height: 1.8; }
         
         .text-ko { display: none; color: #555; font-size: 15px; margin-top: 16px; border-top: 1px dashed #ccc; padding-top: 16px; }
         .text-ko.show { display: block; }
 
-        /* Marking (Pen) System */
         .mark-base { transition: all 0.3s ease; border-radius: 4px; }
         .mark-claim.active { background-color: var(--pen-claim); }
         .mark-reason.active { background-color: var(--pen-reason); }
@@ -57,7 +53,6 @@
         .mark-signal { transition: all 0.3s ease; }
         .mark-signal.active { color: var(--pen-signal); font-weight: 800; text-decoration: underline; text-underline-offset: 4px; }
 
-        /* M3 Custom Switches */
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
@@ -65,14 +60,17 @@
         input:checked + .slider { background-color: var(--md-sys-color-primary); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* M3 Bottom Sheet Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 500; display: none; opacity: 0; transition: opacity 0.3s; }
-        .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--md-sys-color-surface); border-radius: 28px 28px 0 0; padding: 24px; z-index: 501; transition: bottom 0.3s cubic-bezier(0.2, 0, 0, 1); box-shadow: 0 -4px 16px rgba(0,0,0,0.1); }
+        .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--md-sys-color-surface); border-radius: 28px 28px 0 0; padding: 24px; z-index: 501; transition: bottom 0.3s cubic-bezier(0.2, 0, 0, 1); box-shadow: 0 -4px 16px rgba(0,0,0,0.1); max-height: 85vh; display: flex; flex-direction: column; }
         .bottom-sheet.open { bottom: 0; }
         .modal-overlay.open { display: block; opacity: 1; }
-        .sheet-handle { width: 32px; height: 4px; background: #C4C7C5; border-radius: 2px; margin: 0 auto 24px auto; }
+        .sheet-handle { width: 32px; height: 4px; background: #C4C7C5; border-radius: 2px; margin: 0 auto 24px auto; flex-shrink: 0; }
         
         #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background-color: #313033; color: #F4EFF4; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+
+        /* M3 Select Button */
+        .m3-select-btn { width: 100%; padding: 16px; border-radius: 16px; border: 1px solid #E0E2DB; background: #fff; font-weight: 700; color: #444; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .m3-select-btn:active { background: #f9f9f9; }
     </style>
 </head>
 <body>
@@ -86,16 +84,14 @@
     </header>
 
     <main>
-        <!-- Question Selector -->
         <div class="mb-5">
-            <select id="question-select" class="w-full p-3.5 rounded-xl border border-gray-300 font-bold text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="loadQuestion(this.value)">
-                <option value="">Loading Data...</option>
-            </select>
+            <button class="m3-select-btn" onclick="openQuestionSheet()">
+                <span id="current-question-label">Loading Data...</span>
+                <span class="material-symbols-outlined">expand_more</span>
+            </button>
         </div>
         
-        <!-- Reader Area -->
         <div class="card" id="reader-card">
-            <!-- 6 Toggles -->
             <div class="toggle-panel">
                 <button class="toggle-btn" onclick="toggleOption('signal', this)">Signal ⚪</button>
                 <button class="toggle-btn" onclick="toggleOption('logic', this)">Logic ⚪</button>
@@ -109,7 +105,6 @@
             <div id="passage-trans" class="text-ko text-justify"></div>
         </div>
 
-        <!-- Logic Calculator Output -->
         <div id="analysis-sections" style="display: none;">
             <div class="card bg-blue-50 border-blue-200" id="sec-summary">
                 <div class="card-title text-blue-700">Main Idea</div>
@@ -129,8 +124,15 @@
         <div class="h-10"></div>
     </main>
 
-    <!-- M3 Settings Bottom Sheet -->
-    <div class="modal-overlay" id="overlay" onclick="closeSettings()"></div>
+    <div class="modal-overlay" id="overlay-questions" onclick="closeQuestionSheet()"></div>
+    <div class="bottom-sheet" id="sheet-questions">
+        <div class="sheet-handle"></div>
+        <h2 class="text-lg font-bold mb-4 text-gray-800 flex-shrink-0">Select Question</h2>
+        <div id="question-list" class="flex flex-col gap-1 overflow-y-auto pb-4">
+            </div>
+    </div>
+
+    <div class="modal-overlay" id="overlay-settings" onclick="closeSettings()"></div>
     <div class="bottom-sheet" id="sheet-settings">
         <div class="sheet-handle"></div>
         <h2 class="text-lg font-bold mb-6 text-gray-800">Settings</h2>
@@ -154,14 +156,13 @@
     <div id="toast">Notice</div>
 
     <script>
-        // 안드로이드 먹통 방지: 에러 출력기
         window.onerror = function(msg, url, line) {
             document.getElementById('passage-text').innerHTML = 
                 `<div style="color:red; font-weight:bold; padding:10px; background:#fee2e2; border-radius:8px;">앱 실행 중 에러가 발생했습니다!<br>내용: ${msg}<br>줄 번호: ${line}</div>`;
             return true;
         };
 
-        // 데이터 하드코딩 (fetch 불필요, CORS 에러 원천 차단)
+        // 데이터 하드코딩
         const db = [
   {
     "id": "26_18",
@@ -658,7 +659,7 @@
         "ko": "철학은 학제간 노력이 필요한 인지 과학에서 특히 중요하며, 여기서 철학은 다른 학문들 사이의 간극을 메우고 새로운 연구 방법을 개척하는 데 도움을 준다."
       }
     },
-    "mainIdea": "철학은 다른 과학 분야보다 더 폭넓은 질문을 던지고 지식 영역 사이의 관계에 통찰 제공한다.",
+    "mainIdea": "철학은 다른 과학 분야보다 더 폭넓은 질문을 던지고 지식 영역 사이의 관계에 통찰을 제공한다.",
     "skip": false
   },
   {
@@ -848,7 +849,7 @@
       "absorbed: 푹 빠진",
       "persuasion: 설득",
       "reluctantly: 마지못해",
-      "scan: 훑어보았다",
+      "scan: 훑어보다",
       "lively: 활기찬"
     ],
     "signals": {
@@ -884,21 +885,31 @@
         let wakeLock = null;
         let studyState = { signal: false, logic: false, translate: false, listenPassage: false, listenVocab: false, zoom: false };
 
-        // fetch 제거하고 즉시 로딩
         function loadData() {
             initSelect();
         }
 
+        // M3 Bottom Sheet Question Select 구현
         function initSelect() {
-            const select = document.getElementById('question-select');
-            select.innerHTML = '';
+            const list = document.getElementById('question-list');
+            list.innerHTML = '';
+            
             db.forEach((item) => {
-                const option = document.createElement('option');
-                option.value = item.id;
-                option.textContent = `2026 CSAT - Q${item.id.split('_')[1]}`;
-                select.appendChild(option);
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl hover:bg-gray-100 font-medium text-gray-700 transition active:bg-gray-200 border border-transparent";
+                btn.textContent = `2026 CSAT - Q${item.id.split('_')[1]}`;
+                btn.onclick = () => {
+                    document.getElementById('current-question-label').textContent = btn.textContent;
+                    loadQuestion(item.id);
+                    closeQuestionSheet();
+                };
+                list.appendChild(btn);
             });
-            if(db.length > 0) loadQuestion(db[0].id);
+            
+            if(db.length > 0) {
+                document.getElementById('current-question-label').textContent = `2026 CSAT - Q${db[0].id.split('_')[1]}`;
+                loadQuestion(db[0].id);
+            }
         }
 
         function loadQuestion(id) {
@@ -1015,13 +1026,9 @@
             }
         }
 
+        // 안전한 TTS 실행 (검사 코드 삭제)
         function manageTTS(mode) {
-            if (!('speechSynthesis' in window)) {
-                showToast("이 기기에서는 음성 기능을 지원하지 않습니다.");
-                return;
-            }
-
-            window.speechSynthesis.cancel(); 
+            try { if(window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e) {}
 
             if (mode === 'passage' && !studyState.listenPassage) return;
             if (mode === 'vocab' && !studyState.listenVocab) return;
@@ -1067,7 +1074,7 @@
                         }
                     };
                 } catch(e) {
-                    showToast("음성 출력 중 오류가 발생했습니다.");
+                    showToast("음성을 재생할 수 없습니다.");
                 }
             }
         }
@@ -1081,26 +1088,31 @@
             document.getElementById('passage-text').classList.remove('zoom-on');
             document.getElementById('passage-trans').classList.remove('show');
             document.getElementById('analysis-sections').style.display = 'none';
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch(e) {}
         }
 
+        // M3 Question Select Sheet
+        function openQuestionSheet() {
+            document.getElementById('overlay-questions').classList.add('open');
+            document.getElementById('sheet-questions').classList.add('open');
+        }
+        function closeQuestionSheet() {
+            document.getElementById('overlay-questions').classList.remove('open');
+            document.getElementById('sheet-questions').classList.remove('open');
+        }
+
+        // M3 Settings Sheet
         function openSettings() {
-            document.getElementById('overlay').classList.add('open');
+            document.getElementById('overlay-settings').classList.add('open');
             document.getElementById('sheet-settings').classList.add('open');
         }
-        
         function closeSettings() {
-            document.getElementById('overlay').classList.remove('open');
+            document.getElementById('overlay-settings').classList.remove('open');
             document.getElementById('sheet-settings').classList.remove('open');
         }
 
+        // 안전한 WakeLock 실행 (검사 코드 삭제)
         async function handleWakeLock(checkbox) {
-            if (!('wakeLock' in navigator)) {
-                showToast("이 기기에서는 화면 켜짐 유지를 지원하지 않습니다.");
-                checkbox.checked = false;
-                return;
-            }
-
             if (checkbox.checked) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
@@ -1110,11 +1122,13 @@
                     checkbox.checked = false;
                 }
             } else {
-                if (wakeLock !== null) {
-                    await wakeLock.release();
-                    wakeLock = null;
-                    showToast("화면 켜짐 유지 꺼짐.");
-                }
+                try {
+                    if (wakeLock !== null) {
+                        await wakeLock.release();
+                        wakeLock = null;
+                        showToast("화면 켜짐 유지 꺼짐.");
+                    }
+                } catch(e) {}
             }
         }
 
