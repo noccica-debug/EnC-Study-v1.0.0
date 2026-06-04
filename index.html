@@ -446,51 +446,77 @@
             }
         }
 
-        // 웹뷰 음성 증발 방지용 전역 변수
+     // 안드로이드 모바일 브라우저/웹뷰 GC(가비지 컬렉션) 방지용 전역 변수
         window.__tts_utterance__ = null;
 
-      function manageTTS() {
-    if (typeof window.speechSynthesis === 'undefined' && typeof SpeechSynthesisUtterance === 'undefined') {
-        showToast("이 기기는 음성 엔진(TTS)을 지원하지 않습니다.");
-        studyState.listen = false;
-        updateButtonUI('listen');
-        return;
-            }
-
-            try { window.speechSynthesis.cancel(); } catch(e) {}
-
+        function manageTTS() {
             if (!studyState.listen) return;
 
             const textToRead = currentData.passage;
-            if (textToRead) {
-                try {
-                    const utterance = new SpeechSynthesisUtterance(textToRead);
-                    utterance.lang = 'en-US';
-                    utterance.rate = 1.0; 
-                    utterance.pitch = 1.0; 
-                    
-                    // 재생 종료 시 버튼 Off 동기화
-                    utterance.onend = () => {
-                        studyState.listen = false;
-                        updateButtonUI('listen');
-                    };
+            if (!textToRead) return;
 
-                    utterance.onerror = (e) => {
-                        console.error("TTS 에러:", e);
-                        showToast(`음성 재생 오류가 발생했습니다.`);
-                        studyState.listen = false;
-                        updateButtonUI('listen');
-                    };
+            if (typeof window.speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') {
+                showToast("이 기기는 음성 엔진(TTS)을 지원하지 않습니다.");
+                studyState.listen = false;
+                updateButtonUI('listen');
+                return;
+            }
 
-                    window.speechSynthesis.speak(utterance);
-                    // 안드로이드 모바일 브라우저 GC 방지를 위한 윈도우 객체 할당
-                    window.__tts_utterance__ = utterance;
+            // 기존 음성이 남아있으면 초기화
+            try { window.speechSynthesis.cancel(); } catch(e) {}
 
-                } catch(e) {
-                    showToast(`음성 엔진 호출 실패: ${e.message}`);
-                    studyState.listen = false;
-                    updateButtonUI('listen');
+            const utterance = new SpeechSynthesisUtterance(textToRead);
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            utterance.onend = () => {
+                studyState.listen = false;
+                updateButtonUI('listen');
+            };
+
+            utterance.onerror = (e) => {
+                console.error("TTS 에러:", e);
+                // 의도적인 재생 취소(interrupted)가 아닌 경우에만 에러 표시
+                if (e.error !== 'interrupted' && e.error !== 'canceled') {
+                    showToast(`음성 재생 오류: ${e.error}`);
                 }
+                studyState.listen = false;
+                updateButtonUI('listen');
+            };
+
+            // [핵심 해결책] 웹뷰 목소리 지연 로딩 방어 및 영어 음성 강제 할당
+            let voices = window.speechSynthesis.getVoices();
+            
+            const playTTS = (voiceList) => {
+                if (voiceList && voiceList.length > 0) {
+                    // 영어(en) 음성을 찾아 우선 할당 (안드로이드 웹뷰 무음 버그 방어)
+                    const engVoice = voiceList.find(v => v.lang.includes('en'));
+                    if (engVoice) {
+                        utterance.voice = engVoice;
+                    }
+                }
+                window.speechSynthesis.speak(utterance);
+                window.__tts_utterance__ = utterance; // GC 방지
+            };
+
+            if (voices.length > 0) {
+                // 즉시 목소리를 찾은 경우 바로 재생
+                playTTS(voices);
+            } else {
+                // 웹뷰 버그로 목소리 목록이 비어있다면, 로딩될 때까지 대기 후 재생
+                window.speechSynthesis.onvoiceschanged = () => {
+                    voices = window.speechSynthesis.getVoices();
+                    playTTS(voices);
+                    window.speechSynthesis.onvoiceschanged = null; // 중복 실행 방지
+                };
+                
+                // 만약 onvoiceschanged 이벤트조차 발생하지 않는 악성 기기를 위한 강제 실행 (0.3초 대기)
+                setTimeout(() => {
+                    if (studyState.listen && window.__tts_utterance__ !== utterance) {
+                        playTTS(window.speechSynthesis.getVoices());
+                    }
+                }, 300);
             }
         }
 
