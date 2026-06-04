@@ -449,12 +449,12 @@
         // 웹뷰 음성 증발 방지용 전역 변수
         window.__tts_utterance__ = null;
 
-        function manageTTS() {
-            if (!('speechSynthesis' in window)) {
-                showToast("이 기기는 음성 엔진(TTS)을 지원하지 않습니다.");
-                studyState.listen = false;
-                updateButtonUI('listen');
-                return;
+      function manageTTS() {
+    if (typeof window.speechSynthesis === 'undefined' && typeof SpeechSynthesisUtterance === 'undefined') {
+        showToast("이 기기는 음성 엔진(TTS)을 지원하지 않습니다.");
+        studyState.listen = false;
+        updateButtonUI('listen');
+        return;
             }
 
             try { window.speechSynthesis.cancel(); } catch(e) {}
