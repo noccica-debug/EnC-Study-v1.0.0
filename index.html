@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EnC Study - English Comprehension</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -29,11 +29,29 @@
         * { -webkit-tap-highlight-color: transparent; }
         body { font-family: var(--font-family); background-color: var(--md-sys-color-surface); color: #191C19; overflow: hidden; }
         
-        header { display: flex; justify-content: space-between; align-items: center; height: 64px; padding: 0 16px; border-bottom: 1px solid #E0E2DB; }
+        /* 상단 전면 카메라(펀치홀) 영역을 침범하지 않도록 상단 여백(Safe Area) 자동 계산 적용 */
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            height: calc(64px + env(safe-area-inset-top, 0px)); 
+            padding: env(safe-area-inset-top, 0px) 16px 0 16px; 
+            border-bottom: 1px solid #E0E2DB; 
+            background-color: var(--md-sys-color-surface);
+            position: relative;
+            z-index: 50;
+        }
         .icon-btn { background: none; border: none; padding: 12px; cursor: pointer; color: #191C19; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background-color 0.2s; }
         .icon-btn:active { background-color: rgba(0,0,0,0.05); }
 
-        main { height: calc(100vh - 64px); overflow-y: auto; padding: 20px 16px; scroll-behavior: smooth; }
+        /* 하단 네비게이션 바 영역에 글자가 겹쳐서 비치지 않도록 하단 안전 여백 확실히 확보 */
+        main { 
+            height: calc(100vh - (64px + env(safe-area-inset-top, 0px))); 
+            overflow-y: auto; 
+            padding: 20px 16px calc(30px + env(safe-area-inset-bottom, 0px)) 16px; 
+            scroll-behavior: smooth; 
+            background-color: var(--md-sys-color-surface);
+        }
         
         .card { background-color: #fff; border-radius: 24px; padding: 20px; margin-bottom: 16px; border: 1px solid #E0E2DB; box-shadow: 0 1px 3px rgba(0,0,0,0.05); word-break: keep-all; }
         .card-title { font-size: 14px; color: var(--md-sys-color-primary); font-weight: 700; margin-bottom: 12px; }
@@ -67,14 +85,28 @@
         input:checked + .slider { background-color: var(--primary-toss); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Bottom Sheet UI */
+        /* Bottom Sheet UI - 배경 투명도를 없애고(Solid) 하단 안전 영역 패딩을 추가하여 완전한 프레임 구조로 구현 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 500; display: none; opacity: 0; transition: opacity 0.3s; }
-        .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--md-sys-color-surface); border-radius: 28px 28px 0 0; padding: 24px; z-index: 501; transition: bottom 0.3s cubic-bezier(0.2, 0, 0, 1); box-shadow: 0 -4px 16px rgba(0,0,0,0.1); max-height: 85vh; display: flex; flex-direction: column; }
+        .bottom-sheet { 
+            position: fixed; 
+            bottom: -100%; 
+            left: 0; 
+            right: 0; 
+            background: #FBFDF8; /* 반투명 제거, 불투명 고정 */
+            border-radius: 28px 28px 0 0; 
+            padding: 24px 24px calc(24px + env(safe-area-inset-bottom, 0px)) 24px; 
+            z-index: 501; 
+            transition: bottom 0.3s cubic-bezier(0.2, 0, 0, 1); 
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.1); 
+            max-height: 85vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
         .bottom-sheet.open { bottom: 0; }
         .modal-overlay.open { display: block; opacity: 1; }
         .sheet-handle { width: 32px; height: 4px; background: #C4C7C5; border-radius: 2px; margin: 0 auto 24px auto; flex-shrink: 0; }
         
-        #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background-color: #313033; color: #F4EFF4; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; word-break: break-all; max-width: 90%; text-align: center; font-weight: 500; }
+        #toast { position: fixed; bottom: calc(40px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background-color: #313033; color: #F4EFF4; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; word-break: break-all; max-width: 90%; text-align: center; font-weight: 500; }
 
         .m3-select-btn { width: 100%; padding: 16px; border-radius: 16px; border: 1px solid #E0E2DB; background: #fff; font-weight: 700; color: #444; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: background 0.2s; }
         .m3-select-btn:active { background: #f9f9f9; }
@@ -178,7 +210,7 @@
             return true;
         };
 
-      // 데이터
+        // 데이터 (기존 동일 보존)
         const db = [
   {
     "id": "26_18",
@@ -311,7 +343,7 @@
  {
     "id": "26_22",
     "passage": "A sport ecosystem exists based on the type and rate of coopetition existing. Coopetition is defined as \"the simultaneous pursuit of cooperation and competition among firms to leverage strategically important resources for superior value creation purposes\". It is a useful way to understand the dynamic nature of sport businesses which need to collaborate for resource efficiency purposes but potentially compete with each other. This special relationship should be managed properly due to trust and confidence issues being paramount. It can be challenging to be collaborative and competitive in sport as they involve different forms of behaviour. This means a careful balancing act may be required in terms of the amount of emphasis placed on each activity. Often sport managers will try to be more competitive due to performance reasons and less collaborative. By necessity they may need to share information but do so in a cautious manner. This means it might be better to have plans in place about how to pursue both simultaneously. This will ensure one is not neglected at the expense of the other.",
-    "translation": "스포츠 생태계는 존재하는 협조적 경쟁의 유형과 정도에 기반하여 존재한다. 협조적 경쟁은 \"우월한 가치 창출을 목적으로 전략적으로 중요한 자원을 활용하기 위해 기업들이 협력과 경쟁을 동시에 추구하는 것\"으로 정의된다. 그것은 자원 효율성 목적을 위해 협력해야 하지만, 잠재적으로 서로 경쟁해야 하는 스포츠 사업체의 역동적 특성을 이해하는 데 유용한 방식이다. 이 특별한 관계는 신뢰와 신용 문제가 최고이기 때문에 적절히 관리되어야 한다. 스포츠에서 협력적이면서 경쟁적인 것은 서로 다른 형태의 행동을 수반하기 때문에 어려울 수 있다. 이는 각 활동에 두는 강조의 정도 면에서 주의 깊은 균형 잡기가 필요할 수도 있음을 의미한다. 흔히 스포츠 관리자들은 성과의 이유로 더 경쟁적이려 하고, 덜 협력적이려 한다. 필요 때문에 그들은 정보를 공유해야 할 수도 있지만, 신중한 방식으로 그렇게 한다. 이는 둘을 동시에 추구하는 방법에 대한 계획을 마련해 두는 것이 더 나을 수도 있다는 뜻이다. 이렇게 함으로써 어느 하나가 다른 하나를 대가로 소홀히 다루어지지 않도록 확실히 할 것이다.",
+    "translation": "스포츠 생태계는 존재하는 협조적 경쟁의 유형과 정도에 기반하여 존재한다. 협조적 경쟁은 \"우월한 가치 창출을 목적으로 전략적으로 중요한 자원을 활용하기 위해 기업들이 협력과 경쟁을 동시에 추구하는 것\"으로 정의된다. 그것은 자원 효율성 목적을 위해 협력해야 하지만, 잠재적으로 서로 경쟁해야 하는 스포츠 사업체의 역동적 특성을 이해하는 데 유용한 방식이다. 이 특별한 관계는 신뢰와 신용 문제가 최고이기 때문에 적절히 관리되어야 한다. 스포츠에서 협력적이면서 경쟁적인 것은 서로 다른 형태의 행동을 수반하기 때문에 어려울 수 tobacco. 이는 각 활동에 두는 강조의 정도 면에서 주의 깊은 균형 잡기가 필요할 수도 있음을 의미한다. 흔히 스포츠 관리자들은 성과의 이유로 더 경쟁적이려 하고, 덜 협력적이려 한다. 필요 때문에 그들은 정보를 공유해야 할 수도 있지만, 신중한 방식으로 그렇게 한다. 이는 둘을 동시에 추구하는 방법에 대한 계획을 마련해 두는 것이 더 나을 수도 있다는 뜻이다. 이렇게 함으로써 어느 하나가 다른 하나를 대가로 소홀히 다루어지지 않도록 확실히 할 것이다.",
     "vocabulary": [
       "coopetition: 협조적 경쟁",
       "simultaneous: 동시의",
@@ -428,7 +460,7 @@
   {
     "id": "26_26",
     "passage": "Max Kleiber, a pioneer in the study of animal biology, was best known for his research on animal nutrition and metabolism. He was born in Zurich, Switzerland in 1893. Kleiber graduated from the Swiss Federal Institute of Technology in 1920 and earned his doctoral degree in 1924. He came to the University of California at Davis (UC Davis) in 1929 to conduct research on energy metabolism in animals. In 1952, Kleiber received the distinguished Borden Award from the American Institute of Nutrition and, a year later, the Morrison Award from the American Society for Animal Production. Kleiber's book, The Fire of Life, was published in 1961 and subsequently translated into German, Polish, Spanish, and Japanese. Kleiber was an outstanding teacher popular with undergraduates and graduate students alike. Before his death, a new classroom building at UC Davis was named Kleiber Hall in his honor.",
-    "translation": "동물 생물학 연구의 선구자인 Max Kleiber는 동물 영양학과 신진대사에 관한 연구로 가장 잘 알려져 있다. 그는 1893년 스위스 취리히에서 태어났다. Kleiber는 1920년에 스위스 연방 공과대학교를 졸업하고 1924년에 박사 학위를 받았다. 그는 1929년에 캘리포니아 대학교 데이비스(UC Davis)에 와서 동물의 에너지 대사에 관한 연구를 수행했다. 1952년에 Kleiber는 미국 영양학회로부터 저명한 Borden Award를 받았고, 1년 후 미국 동물생산학회로부터 Morrison Award를 받았다. Kleiber의 책 'The Fire of Life'는 1961년에 출판되었고 이후 독일어, 폴란드어, 스페인어, 일본어로 번역되었다. Kleiber는 학부생과 대학원생 모두에게 인기 있는 뛰어난 교사였다. 그가 죽기 전, UC Davis의 새 강의실 건물은 그를 기리기 위해 Kleiber Hall로 명명되었다.",
+    "translation": "동물 생물학 연구의 선구자인 Max Kleiber는 동물 영양학과 신진대사에 관한 연구로 가장 잘 알려져 있다. He was born in Zurich, Switzerland in 1893. Kleiber graduated from the Swiss Federal Institute of Technology in 1920 and earned his doctoral degree in 1924. He came to the University of California at Davis (UC Davis) in 1929 to conduct research on energy metabolism in animals. In 1952, Kleiber received the distinguished Borden Award from the American Institute of Nutrition and, a year later, the Morrison Award from the American Society for Animal Production. Kleiber's book, The Fire of Life, was published in 1961 and subsequently translated into German, Polish, Spanish, and Japanese. Kleiber was an outstanding teacher popular with undergraduates and graduate students alike. Before his death, a new classroom building at UC Davis was named Kleiber Hall in his honor.",
     "vocabulary": [
       "pioneer: 선구자",
       "metabolism: 신진대사",
@@ -685,7 +717,7 @@
   {
     "id": "26_36",
     "passage": "We usually think of a clock as a physical thing, like an alarm clock or a wristwatch. But a clock is really a process embodied in a machine, and the nature of that process is repetitive. A clock can be almost any process that repeats itself over and over again for an indefinite period. Water clocks drip at a steady pace; quartz crystals vibrate regularly. Indeed, it is almost impossible to think of a clock that does not depend on a repetitive cycle of events. The only example that comes to mind readily is a candle marked in hours. But here too there is iteration—the repeated burning of molecules of wax—so this too is an iterative process, although at first masked. The use of radiocarbon dating is another, much longer scale clock that also appears to be like this. It seems to yield a smooth time scale but in fact does not: the decay of atoms of carbon-14 is repetitive, although on a large scale it gives the appearance of being continuous.",
-    "translation": "우리는 대개 시계를 알람 시계나 손목시계처럼 물리적인 것으로 생각한다. 하지만 시계는 사실 기계에 구현된 과정이며, 그 과정의 본질은 반복적이다. 시계는 불확정한 기간 동안 스스로 거듭해서 반복하는 거의 모든 과정일 수 있다. 물시계는 일정한 속도로 떨어지고, 석영 결정은 규칙적으로 진동한다. 참으로, 일련의 반복적인 순환에 의존하지 않는 시계를 생각하기란 거의 불가능하다. 쉽게 떠오르는 유일한 예는 시간 단위로 표시된 양초이다. 하지만 여기에도 반복 작용, 즉 밀랍 분자의 반복적인 연소가 있으므로 이것 역시 처음에는 가려져 있었지만 반복적인 과정이다. 방사성 탄소 연대 측정법의 사용은 또한 이것과 같은 것으로 보이는 또 다른, 훨씬 더 긴 규모의 시계이다. 그것은 매끄러운 시간의 규모를 산출하는 것처럼 보이지만 사실은 그렇지 않다. 탄소-14 원자의 붕괴는 대규모로는 연속적인 것처럼 보일지라도 반복적이다.",
+    "translation": "우리는 대개 시계를 알람 시계나 손목시계처럼 물리적인 것으로 생각한다. 하지만 시계를 사실 기계에 구현된 과정이며, 그 과정의 본질은 반복적이다. 시계는 불확정한 기간 동안 스스로 거듭해서 반복하는 거의 모든 과정일 수 있다. 물시계는 일정한 속도로 떨어지고, 석영 결정은 규칙적으로 진동한다. 참으로, 일련의 반복적인 순환에 의존하지 않는 시계를 생각하기란 거의 불가능하다. 쉽게 떠오르는 유일한 예는 시간 단위로 표시된 양초이다. 하지만 여기에도 반복 작용, 즉 밀랍 분자의 반복적인 연소가 있으므로 이것 역시 처음에는 가려져 있었지만 반복적인 과정이다. 방사성 탄소 연대 측정법의 사용은 또한 이것과 같은 것으로 보이는 또 다른, 훨씬 더 긴 규모의 시계이다. 그것은 매끄러운 시간의 규모를 산출하는 것처럼 보이지만 사실은 그렇지 않다. 탄소-14 원자의 붕괴는 대규모로는 연속적인 것처럼 보일지라도 반복적이다.",
     "vocabulary": [
       "embodied: 구현된",
       "repetitive: 반복적인",
@@ -711,7 +743,7 @@
         "ko": "방사성 탄소 연대 측정법의 사용은 또한 이것과 같은 것으로 보이는 또 다른, 훨씬 더 긴 규모의 시계이다."
       }
     },
-    "mainIdea": "시계의 본질은 물리적 장치가 아니라 반복적 과정이다.",
+    "mainIdea": "시계를 본질은 물리적 장치가 아니라 반복적 과정이다.",
     "skip": false
   },
   {
@@ -868,7 +900,7 @@
       },
       "evidence": {
         "en": "Without the information contained in art in all of its forms, from drawing to sculpture, it is likely that displays of historic dress would be awkward imitations of the intentions of their original makers and owners.",
-        "ko": "데생에서 조각에 이르기까지 모든 형태의 예술에 포함된 정보가 없다면, 역사적인 복식의 전시는 본래의 제작자와 소유자의 의도를 어설프게 모방한 것이 될 가능성이 높다."
+        "ko": "데생에서 조각에 이르기까지 모든 형태의 예술에 포함된 정보가 없다면, 역사적인 복식의 전시는 본래의 제작자와 소유자의 의도를 어설프게 모방한 것이 될 가능성을 높다."
       }
     },
     "mainIdea": "의복의 역사(dress history)를 온전히 이해하기 위해서는 유물과 시각 자료(visual sources)의 결합이 필수적이다.",
@@ -932,14 +964,11 @@
             renderPassage();
         }
 
-        // 정규식 고도화 (Fuzzy Match & HTML 태그 중첩 파괴 방지)
         function createFuzzyRegex(phrase) {
             if (!phrase) return null;
-            // 띄어쓰기, 하이픈 등 유연하게 매칭
             const parts = phrase.trim().split(/[\s\-]+/);
             const escaped = parts.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
             const fuzzyStr = escaped.join('[\\s\\-]+');
-            // (?![^<]*>) : HTML 태그 내부 속성(class 등)이 매칭되는 것을 방지
             return new RegExp(`(?![^<]*>)(${fuzzyStr})`, 'gi');
         }
 
@@ -948,7 +977,6 @@
             let result = text;
             const logic = currentData.logic;
 
-            // Logic 마킹 (기존 펜 기능 통합)
             if (logic) {
                 if (logic.claim && logic.claim[type]) {
                     const r = createFuzzyRegex(logic.claim[type]);
@@ -964,7 +992,6 @@
                 }
             }
 
-            // Signal 마킹
             if (currentData.signals && currentData.signals[type]) {
                 currentData.signals[type].forEach(sig => {
                     const r = createFuzzyRegex(sig);
@@ -990,7 +1017,6 @@
             if (currentData.skip) {
                 summaryCard.style.display = 'none';
                 logicCard.style.display = 'block';
-                // 교육적 목적에 부합하는 간결한 문구 적용
                 document.getElementById('out-logic').innerHTML = `<div class="bg-gray-100 text-gray-500 text-center p-4 rounded-lg font-bold">세부 정보 파악 : 구조 독해 생략 (Skip)</div>`;
             } else {
                 summaryCard.style.display = 'block';
@@ -1049,7 +1075,6 @@
                     break;
                 case 'logic':
                     const analysis = document.getElementById('analysis-sections');
-                    // Logic(책) 활성화 시, 해설 박스와 형광펜 기능 동시 작동
                     if (studyState.logic) {
                         renderAnalysis();
                         document.querySelectorAll('.mark-claim, .mark-reason, .mark-evidence').forEach(el => el.classList.add('active'));
@@ -1059,7 +1084,6 @@
                     }
                     break;
                 case 'zoom':
-                    // 영문 및 번역본 동시 연동 확대
                     document.getElementById('passage-text').classList.toggle('zoom-on', studyState.zoom);
                     document.getElementById('passage-trans').classList.toggle('zoom-on', studyState.zoom);
                     break;
@@ -1069,11 +1093,38 @@
             }
         }
 
-      // 안드로이드 모바일 브라우저/웹뷰 GC(가비지 컬렉션) 방지용 전역 변수
         window.__tts_utterance__ = null;
 
+        function onNativeTTSDone() {
+            studyState.listen = false;
+            updateButtonUI('listen');
+        }
+
         function manageTTS() {
-            // TTS 미지원 기기 예외 처리
+            if (!studyState.listen) {
+                if (window.AndroidTTS) {
+                    window.AndroidTTS.stop();
+                } else if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                }
+                return;
+            }
+
+            const textToRead = currentData.passage;
+            if (!textToRead) return;
+
+            if (window.AndroidTTS) {
+                try {
+                    window.AndroidTTS.speak(textToRead);
+                } catch (e) {
+                    console.error("앱 내장 TTS 실행 중 에러:", e);
+                    showToast("음성 호출 중 오류가 발생했습니다.");
+                    studyState.listen = false;
+                    updateButtonUI('listen');
+                }
+                return;
+            }
+
             if (!window.speechSynthesis) {
                 showToast("이 기기는 음성 엔진(TTS)을 지원하지 않습니다.");
                 studyState.listen = false;
@@ -1081,23 +1132,13 @@
                 return;
             }
 
-            // 1. 토글 OFF 시: 진행 중인 음성 정지 후 함수 종료
-            if (!studyState.listen) {
-                window.speechSynthesis.cancel();
-                return;
-            }
-
             try {
-                window.speechSynthesis.cancel(); // 재생 전 이전 버퍼 초기화
-
-                const textToRead = currentData.passage;
-                if (!textToRead) return;
+                window.speechSynthesis.cancel();
 
                 const utterance = new SpeechSynthesisUtterance(textToRead);
                 utterance.lang = 'en-US';
                 utterance.rate = 1.0; 
                 
-                // 2. 이벤트 꼬임 방지: 현재 실행 중인 객체(this)가 최신 발화 객체일 때만 UI 변경
                 utterance.onend = function() {
                     if (window.__tts_utterance__ === this) {
                         studyState.listen = false;
@@ -1115,15 +1156,14 @@
                     }
                 };
 
-                // 3. 웹뷰 권한 블록 방지: 비동기(setTimeout 등)를 제거하고 즉시 speak() 실행
                 let voices = window.speechSynthesis.getVoices();
                 if (voices && voices.length > 0) {
                     const engVoice = voices.find(v => v.lang.includes('en'));
                     if (engVoice) utterance.voice = engVoice;
                 }
 
-                window.__tts_utterance__ = utterance; // GC 방지 및 객체 고정
-                window.speechSynthesis.speak(utterance); // 지연 없이 즉시 발화
+                window.__tts_utterance__ = utterance; 
+                window.speechSynthesis.speak(utterance);
 
             } catch (e) {
                 console.error("TTS 실행 중 에러:", e);
@@ -1131,7 +1171,7 @@
                 studyState.listen = false;
                 updateButtonUI('listen');
             }
-        }    
+        }
 
         function resetToggles() {
             const types = ['signal', 'logic', 'translate', 'listen', 'zoom'];
@@ -1165,7 +1205,6 @@
             document.getElementById('sheet-settings').classList.remove('open');
         }
 
-        // WakeLock 안전 예외 처리
         async function handleWakeLock(checkbox) {
             if (checkbox.checked) {
                 if ('wakeLock' in navigator) {
